@@ -93,17 +93,17 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 GO
 
 CREATE TABLE dbCureSA.Paciente(
-	idHistoriaClinica	INT IDENTITY(1,1),
+	idHistoriaClinica		INT IDENTITY(1,1),
 	nombre				VARCHAR(50) NOT NULL,
 	apellido			VARCHAR(50) NOT NULL,
-	apellidoMaterno		VARCHAR(50),
+	apellidoMaterno			VARCHAR(50),
 	fecNac				DATE NOT NULL,
 	tipoDoc				CHAR(3) NOT NULL,
 	nroDoc				CHAR(8) NOT NULL,
 	sexo				CHAR NOT NULL,
 	genero				CHAR(10) NOT NULL,
-	nacionalidad		VARCHAR(25) NOT NULL,
-	FK_idCobertura		INT NOT NULL,
+	nacionalidad			VARCHAR(25) NOT NULL,
+	FK_idCobertura			INT NOT NULL,
 	fotoPerfil			VARBINARY(MAX),
 	mail				VARCHAR(50),
 	telFijo				CHAR(14) NOT NULL,
@@ -150,7 +150,7 @@ CREATE TABLE dbCureSA.Paciente(
 	),
 	CONSTRAINT CK_nroDoc CHECK (
 		nroDoc NOT LIKE '[^0-9]'				-- Debe ser unicamente dígitos.
-		AND LEN(nroDoc) > 7						-- Debe ser mayor a 7 dígitos.
+		AND LEN(nroDoc) >= 7						-- Debe ser mayor a 7 dígitos.
 	),
 )
 GO
@@ -160,13 +160,13 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 GO
 
 CREATE TABLE dbCureSA.Domicilio(
-	id					INT IDENTITY(1,1),
+	id				INT IDENTITY(1,1),
 	idPaciente			INT,
 	calle				VARCHAR(50) NOT NULL,
 	numero				INT NOT NULL,
 	piso				INT,
-	departamento		INT,
-	cp					INT NOT NULL,
+	departamento			INT,
+	cp				INT NOT NULL,
 	pais				VARCHAR(50) NOT NULL DEFAULT 'Argentina',
 	provincia			VARCHAR(50) NOT NULL DEFAULT 'Buenos Aires',
 	localidad			VARCHAR(50) NOT NULL,
@@ -205,9 +205,9 @@ IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_
 GO
 
 CREATE TABLE dbCureSA.Usuario(
-	idUsuario			INT,
-	idPaciente			CHAR(10),						-- El Usuario debe coincidir con el documento
-	contrasenia			VARCHAR(50) NOT NULL,
+	idUsuario		INT,
+	idPaciente		CHAR(10),						-- El Usuario debe coincidir con el documento
+	contrasenia		VARCHAR(50) NOT NULL,
 	fechaCreacion		DATE NOT NULL,
 	
 	CONSTRAINT PK_idUsuario PRIMARY KEY (idUsuario,idPaciente),
