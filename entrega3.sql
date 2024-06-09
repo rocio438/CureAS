@@ -1,5 +1,5 @@
 --creaamos la base de datos con el nombre en criterio al enunciado "generar una db con nombre "COMXXXXGYY" 
---donde XXXX hace referencia al numero de comision y YY hace referencia al nro del grupo
+--donde XXXX hace referencia al numero de comision e YY hace referencia al nro del grupo
 IF EXISTS(SELECT 1 FROM SYS.DATABASES WHERE NAME = 'COM5600G08')
 	DROP DATABASE COM5600G08;
 GO
