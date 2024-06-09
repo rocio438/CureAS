@@ -22,6 +22,12 @@ IF EXISTS(SELECT 1 FROM SYS.schemas WHERE name LIKE 'spHospital')
 GO
 CREATE SCHEMA spHospital;
 GO
+-- creación de esquema para las funciones
+IF EXISTS(SELECT 1 FROM SYS.schemas WHERE name LIKE 'fnHospital')
+	DROP SCHEMA fnHospital;
+GO
+CREATE SCHEMA fnHospital;
+GO
 --creación de esquema para log
 IF EXISTS(SELECT 1 FROM SYS.schemas WHERE name LIKE 'logHospital')
 	DROP SCHEMA logHospital;
@@ -137,11 +143,11 @@ GO
 
 -- FUNCION de tipo ESCALAR
 
-IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'FN' AND object_id = OBJECT_ID('[spHospital].[verificacionDocPaciente]'))
-	DROP FUNCTION spHospital.verificacionDocPaciente;
+IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'FN' AND object_id = OBJECT_ID('[fnHospital].[verificacionDocPaciente]'))
+	DROP FUNCTION fnHospital.verificacionDocPaciente;
 GO
 
-CREATE OR ALTER FUNCTION spHospital.verificacionDocPaciente(@dni CHAR(8))
+CREATE OR ALTER FUNCTION fnHospital.verificacionDocPaciente(@dni CHAR(8))
 RETURNS BIT
 AS
 BEGIN
@@ -157,7 +163,8 @@ BEGIN
 	RETURN 1
 END
 GO
-
+--fin funcion
+-- creacion tabla usuario
 IF EXISTS(SELECT 1 FROM SYS.all_objects WHERE type = 'U' AND object_id = OBJECT_ID('[dbHospital].[usuario]')) --type = 'U' filtra las tablas de usuario
 	DROP TABLE dbHospital.usuario;
 GO
@@ -187,7 +194,7 @@ CREATE TABLE dbHospital.usuario(
 	CONSTRAINT ck_idPaciente CHECK (
 		id_doc_paciente NOT LIKE '[^0-9]' --es necesario este check, existiendo la funcion? solo con el llamado de la función no bastaría?
 		AND LEN(id_doc_paciente) >= 7
-		AND spHospital.verificacionDocPaciente(id_doc_paciente) = 1 --aca llamamos a la funcion para verificar que exista y coincidencia del DNI de la tabla PACIENTE, entonces se valida la cuenta usuario
+		AND fnHospital.verificacionDocPaciente(id_doc_paciente) = 1 --aca llamamos a la funcion para verificar que exista y coincidencia del DNI de la tabla PACIENTE, entonces se valida la cuenta usuario
 	)
 );
 GO
