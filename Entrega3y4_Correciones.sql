@@ -233,13 +233,13 @@ IF NOT EXISTS ( SELECT 1 FROM sys.tables  WHERE name = 'prestador' AND schema_id
 BEGIN
 
 	CREATE TABLE dbHospital.prestador (
-		id_prestador		int IDENTITY (1,1) PRIMARY KEY, --no viene en carga masiva, podria ser identity? - exacto
+		id_prestador		varchar (50) PRIMARY KEY, --no viene en carga masiva, podria ser identity? - exacto
 		nombrePrestador		varchar(50) UNIQUE NOT NULL, --puede haber mismo prestador ofreciendo distintos planes? - ni idea, je
 		planPrestador		varchar(50) NOT NULL,
 		activo				bit default 1,
 		id_cobertura		int,
 		CONSTRAINT fk_prestadorCobertura FOREIGN KEY (id_cobertura) REFERENCES dbHospital.cobertura (id_cobertura),
-		CONSTRAINT ck_idPrestador CHECK (LEN (id_prestador) = 3)
+		--CONSTRAINT ck_idPrestador CHECK (LEN (id_prestador) = 3)
 	);
 END
 GO
@@ -441,13 +441,13 @@ BEGIN
 		id_especialidad		int,
 		id_sedeAten			int,
 	
-		CONSTRAINT FK_reservaDiasxSede FOREIGN KEY (id_diaSede) REFERENCES dbHospital.diasXsede (id_dia_sede),
-		CONSTRAINT FK_reservaPaciente FOREIGN KEY (id_paciente) REFERENCES dbHospital.paciente (id_historia_clinica),
-		CONSTRAINT FK_reservaEstadoTurno FOREIGN KEY (id_estado) REFERENCES dbHospital.estadoTurno (id_estado_turno),
-		CONSTRAINT FK_reservaTipoTurno FOREIGN KEY (id_tipoTurno) REFERENCES dbHospital.tipoTurno(id_tipo_turno),
-		CONSTRAINT FK_reservaMedico FOREIGN KEY (id_medico) REFERENCES dbHospital.medico (id_medico),
-		CONSTRAINT FK_reservaEspecialidadMed FOREIGN KEY (id_especialidad) REFERENCES dbHospital.especialidad (id_especialidad),
-		CONSTRAINT FK_reservaSede FOREIGN KEY (id_sedeAten) REFERENCES dbHospital.sedeDeAtencion (id_sede)
+		CONSTRAINT fk_reservaDiasxSede FOREIGN KEY (id_diaSede) REFERENCES dbHospital.diasXsede (id_dia_sede),
+		CONSTRAINT fk_reservaPaciente FOREIGN KEY (id_paciente) REFERENCES dbHospital.paciente (id_historia_clinica),
+		CONSTRAINT fk_reservaEstadoTurno FOREIGN KEY (id_estado) REFERENCES dbHospital.estadoTurno (id_estado_turno),
+		CONSTRAINT fk_reservaTipoTurno FOREIGN KEY (id_tipoTurno) REFERENCES dbHospital.tipoTurno(id_tipo_turno),
+		CONSTRAINT fk_reservaMedico FOREIGN KEY (id_medico) REFERENCES dbHospital.medico (id_medico),
+		CONSTRAINT fk_reservaEspecialidadMed FOREIGN KEY (id_especialidad) REFERENCES dbHospital.especialidad (id_especialidad),
+		CONSTRAINT fk_reservaSede FOREIGN KEY (id_sedeAten) REFERENCES dbHospital.sedeDeAtencion (id_sede)
 	);
 END
 GO
@@ -459,13 +459,15 @@ IF NOT EXISTS ( SELECT 1 FROM sys.tables  WHERE name = 'autorizacion' AND schema
 BEGIN
 	CREATE TABLE dbHospital.autorizacion(
 		id_autorizacion		varchar (30) PRIMARY KEY,
+		id_prestador		varchar (50) NOT NULL,
 		area				varchar (50) NOT NULL,
 		estudio				varchar (50) NOT NULL,
-		prestador			varchar (50) NOT NULL,
 		plann				varchar (50) NOT NULL,
 		porcCobertura		smallint NOT NULL,
 		costo				int NOT NULL,
-		actualizacion		varchar (10) NOT NULL
+		actualizacion		varchar (10) NOT NULL,
+		
+		CONSTRAINT fk_autorizacionEstudio FOREIGN KEY (id_prestador) REFERENCES dbHospital.prestador (id_prestador);
 );
 END
 GO
