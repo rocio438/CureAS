@@ -590,62 +590,161 @@ BEGIN
 END
 GO
 
-
 --*********CREACION DE ROLES***********
 --ACLARACION: No hace falta aclarar esquema, los roles son aplicados a nivel base de datos.
-IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Paciente') 
+--TENGO QUE DROPEARLOS PORQUE NO SE GUARDAN A NIVEL BD, CADA VEZ QUE REINICIO LA BD PARA PROBAR SU FUNCIONAMIENTO VA A SALTAR ERROR
+--PORQUE YA EXISTEN LOS USUARIOS....
+IF  NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Paciente') 
+	BEGIN
 	EXEC ('CREATE ROLE Paciente;');
+	END
+GO
+
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Medico') 
+	BEGIN
+	EXEC ('CREATE ROLE Medico;');
+	END
 GO
 
 IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Personal Administrativo') 
+	BEGIN
 	EXEC ('CREATE ROLE [Personal Administrativo];')
+	END
 GO
 
-IF EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Personal Tecnico clinico') 
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Personal Tecnico clinico') 
+	BEGIN
 	EXEC('CREATE ROLE [Personal Tecnico clinico];');
+	END
 GO
 
-IF EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Administrador General') 
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Administrador General') 
+	BEGIN
 	EXEC('CREATE ROLE [Administrador General];');
+	END
 GO
 
---*********PERMISOS DE ROLES**********
+--*********USUARIOS-LOGIN Y PERMISOS DE ROLES**********
 
 --no se aclara en tp por lo que lo hacemos a consideracion de nuestra opinion
 --para paciente no se como hacer que solo pueda ver sus datos... hay que crear alguna vista
---select SUSER_NAME() as 'UsuarioActual'
---GRANT CONTROL ON DATABASE::COM5600G08 TO [DESKTOP-NFALS10\rodee];
---GO
 
---GRANT EXECUTE ON spHospital.insercionDatos TO Medico;
---GRANT SELECT ON dbHospital.paciente TO Medico;
---GRANT SELECT ON dbHospital.estudio TO Medico;
---GRANT SELECT ON dbHospital.cobertura TO Medico;
---GO
+--los demas no funcionaban porque no se habia creado un user relacionado al rol...
 
---GRANT EXECUTE ON spHospital.borrarDatos TO [Personal Administrativo]; --peligrosa, pero no le podemos dejar solo el borrador a administrador general...
---GRANT EXECUTE ON spHospital.modificacionDatos TO [Personal Administrativo];
---GRANT EXECUTE ON spHospital.insercionDatos TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.paciente TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.reservaTurnoMedico TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.cobertura TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.prestador TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.estadoTurno TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.tipoTurno TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.medico TO [Personal Administrativo];
---GRANT SELECT ON dbHospital.especialidad TO [Personal Administrativo];
---GO
+--CREACION DE USUARIO Y LOGIN EN PACIENTE
+IF NOT EXISTS ( SELECT 1 FROM sys.server_principals  WHERE name = 'PacienteLog') 
+	BEGIN
+	EXEC ('CREATE LOGIN PacienteLog
+	WITH PASSWORD = ''1234'';');
+	END
+GO
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Milanesa') 
+BEGIN
+EXEC ('CREATE USER Milanesa
+FOR LOGIN PacienteLog');
+END
+GO
+Alter role Paciente add member Milanesa
+GO
 
+--Aca van los permisos de paciente, no solucionado todavia...
 
---GRANT EXECUTE ON spHospital.insercionDatos to [Personal Tecnico clinico];
---GRANT SELECT ON dbHosptial.paciente TO [Personal Tecnico clinico];
+--CREACION DE USUARIO Y LOGIN EN MEDICO
+IF NOT EXISTS ( SELECT 1 FROM sys.server_principals  WHERE name = 'Medico') 
+BEGIN
+EXEC ('CREATE LOGIN Medico
+WITH PASSWORD = ''Contrasenia poderosa'';');
+END
+GO
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = '[Dr.Messi]') 
+BEGIN
+EXEC ('CREATE USER [Dr.Messi]
+FOR LOGIN Medico;');
+END
+GO
+Alter role Paciente add member [Dr.Messi]
+GO
+--PERMISOS MEDICO
+GRANT EXECUTE ON spHospital.insercionDatos TO Medico;
+GRANT SELECT ON dbHospital.paciente TO Medico;
+GRANT SELECT ON dbHospital.estudio TO Medico;
+GRANT SELECT ON dbHospital.cobertura TO Medico;
+GO
+
+--CREACION DE USUARIO Y LOGIN EN ADMINISTRATIVO
+
+IF NOT EXISTS ( SELECT 1 FROM sys.server_principals  WHERE name = 'Administrativo') 
+BEGIN
+EXEC ('CREATE LOGIN Administrativo
+WITH PASSWORD = ''Contrasenia fuerte'';');
+END
+GO
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Batman') 
+BEGIN
+EXEC ('CREATE USER Batman
+FOR LOGIN Administrativo;');
+END
+GO
+Alter role [Personal Administrativo] add member Batman
+GO
+--PERMISOS ADMINISTRATIVO
+GRANT EXECUTE ON spHospital.borrarDatos TO [Personal Administrativo]; --peligrosa, pero no le podemos dejar solo el borrador a administrador general...
+GRANT EXECUTE ON spHospital.modificacionDatos TO [Personal Administrativo];
+GRANT EXECUTE ON spHospital.insercionDatos TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.paciente TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.reservaTurnoMedico TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.cobertura TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.prestador TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.estadoTurno TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.tipoTurno TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.medico TO [Personal Administrativo];
+GRANT SELECT ON dbHospital.especialidad TO [Personal Administrativo];
+GO
+
+--CREACION DE USUARIO Y LOGIN EN TECNICO CLINICO
+IF NOT EXISTS ( SELECT 1 FROM sys.server_principals  WHERE name = '[Tecnico Clinico]') 
+BEGIN
+EXEC ('CREATE LOGIN [Tecnico Clinico]
+WITH PASSWORD = ''Contrasenia media'';');
+END
+GO
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Ayudante') 
+BEGIN
+EXEC('CREATE USER Ayudante
+FOR LOGIN [Tecnico Clinico];')
+END
+GO
+Alter role [Personal Tecnico clinico] add member Ayudante
+GO
+--PERMISOS DE TECNICO CLINICO
+GRANT EXECUTE ON spHospital.insercionDatos to [Personal Tecnico clinico];
+--GRANT SELECT ON dbHosptial.paciente TO [Personal Tecnico clinico]; --error en esta y abajo
 --GRANT SELECT ON dbHosptial.estudio TO [Personal Tecnico clinico];
+GO
+
+--CREACION DE USUARIO Y LOGIN EN ADMINISTRADOR GENERAL
+IF NOT EXISTS ( SELECT 1 FROM sys.server_principals  WHERE name = 'Admi') 
+BEGIN
+EXEC ('CREATE LOGIN Admi
+WITH PASSWORD = ''Contrasenia indescifrable'';');
+END
+GO
+IF NOT EXISTS ( SELECT 1 FROM sys.database_principals  WHERE name = 'Jair') 
+BEGIN
+EXEC('CREATE USER Jair
+FOR LOGIN Admi;');
+END
+GO
+Alter role [Administrador General] add member Jair
+GO
+
+--PERMISOS DE ADMINISTRADOR GENERAL
+
+--GRANT CONTROL ON SERVER TO [Administrador General]; --error
 --GO
 
---GRANT CONTROL ON SERVER TO [Administrador General]; 
---GO
 
---*******Importacion de archivos***********
+--******************************Importacion de archivos******************************************
 
 --IMPORTACION DE ESPECIALIDAD CON ARCHIVO DE MEDICO
 CREATE OR ALTER PROCEDURE spHospital.ArchivoEspecialidad (
