@@ -933,7 +933,7 @@ AS
 			fechaNacimiento date NOT NULL,
 			tipoDocumento	varchar (10) NOT NULL, 
 			nroDocumento	char (8) NOT NULL, 
-			sexoBio			char NOT NULL, 
+			sexoBio			varchar(9) NOT NULL, 
 			genero			varchar (20) NOT NULL, 
 			telefonoFijo	char(14) NOT NULL,
 			nacionalidad	varchar (20) NOT NULL,
