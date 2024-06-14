@@ -326,42 +326,97 @@ GO
 --deberiamos borrar idmedico, SEGUN ARCHIVO nroMatricula es unico,se puede usar como id para cargar en la inserccion y que no de error por id_medico null, es siempre de 6 digitos aplicar check
 --los nombres siempre arrancan con Dr. o Dra. podria aplicarse check
 --apellidos siempre arrancan con mayuscula, no creo que haga falta check pero considerar para comparaciones en inserccion
---******************************************************************************************
+
+--CREATE OR ALTER FUNCTION fnHospital.validarHorario(
+--    @id_medico INT,
+--    @id_sede_atencion INT,
+--    @dia DATE,
+--    @horaInicio TIME
+--)
+--RETURNS BIT
+--AS
+--BEGIN
+--    DECLARE @Valido BIT = 1;
+
+--    IF EXISTS (
+--        SELECT 1
+--        FROM dbHospital.diasXsede AS t_anterior
+--        WHERE t_anterior.id_medico = @id_medico
+--            AND t_anterior.id_sede_atencion = @id_sede_atencion
+--            AND t_anterior.dia = @dia
+--            AND (
+--                @horaInicio = DATEADD(MINUTE, 15, t_anterior.horaInicio)
+--                OR
+--                (
+--                    NOT EXISTS (
+--                        SELECT 1
+--                        FROM dbHospital.diasXsede AS primer_turno
+--                        WHERE primer_turno.id_medico = @id_medico
+--                            AND primer_turno.id_sede_atencion = @id_sede_atencion
+--                            AND primer_turno.dia = @dia
+--                            AND primer_turno.horaInicio < @horaInicio
+--                    )
+--                )
+--            )
+--    )
+--	BEGIN
+--		 SET @Valido = 0;
+--		 RETURN @Valido;
+--	END
+--   ELSE
+--		RETURN @Valido;
+--END;
+CREATE OR ALTER FUNCTION fnHospital.validarHorario(
+    @id_medico			int,
+    @id_sede_atencion	int,
+    @dia			    date,
+    @horaInicio			time
+)
+RETURNS BIT
+AS
+BEGIN
+    DECLARE @valido bit = 1;
+
+    IF EXISTS (
+        SELECT 1
+        FROM dbHospital.diasXsede AS t_anterior
+        WHERE t_anterior.id_medico = @id_medico
+            AND t_anterior.id_sede_atencion = @id_sede_atencion
+            AND t_anterior.dia = @dia 
+			AND (@horaInicio = CAST(DATEADD(MINUTE, 15, t_anterior.horaInicio) AS time)
+			  OR
+                (
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM dbHospital.diasXsede AS primer_turno
+                        WHERE primer_turno.id_medico = @id_medico
+                            AND primer_turno.id_sede_atencion = @id_sede_atencion
+                            AND primer_turno.dia = @dia
+                            AND primer_turno.horaInicio < @horaInicio
+                    )
+                )
+            )
+		)
+    
+    BEGIN
+        SET @valido = 0;
+        RETURN @valido;
+    END
+
+    RETURN @valido;
+END;
+GO
 
 --tabla dias x sede
 IF NOT EXISTS ( SELECT 1 FROM sys.tables  WHERE name = 'diasXsede' AND schema_id = SCHEMA_ID('dbHospital')) 
 BEGIN
 	CREATE TABLE dbHospital.diasXsede(
-		id_dia_sede			int PRIMARY KEY,--que criterio tienen los ID de las sede?
-		dia				varchar(10) NOT NULL, 
-		horaInicio		varchar(10) NOT NULL, 
+		id_dia_sede		int PRIMARY KEY,--que criterio tienen los ID de las sede?
+		dia				date NOT NULL, 
+		horaInicio		time NOT NULL, 
 		id_medico	    int,
 		id_sede_atencion int,
---		CONSTRAINT chk_horaInicio CHECK (
---	   EXISTS (
---        SELECT 1
---        FROM dbHospital.diasXsede AS t_anterior
---        WHERE t_anterior.id_medico = dbHospital.diasXsede.id_medico
---        AND t_anterior.id_sede_atencion = dbHospital.diasXsede.id_sede_atencion
---        AND t_anterior.dia = dbHospital.diasXsede.dia
---        AND (dbHospital.diasXsede.horaInicio = DATEADD(MINUTE, 15, t_anterior.horaInicio)
---            OR
---            (
---                NOT EXISTS (
---                    SELECT 1
---                    FROM dbHospital.diasXsede AS primer_turno
---                    WHERE primer_turno.id_medico = dbHospital.diasXsede.id_medico
---                    AND primer_turno.id_sede_atencion = dbHospital.diasXsede.id_sede_atencion
---                    AND primer_turno.dia = dbHospital.diasXsede.dia
---                    AND primer_turno.horaInicio < dbHospital.diasXsede.horaInicio
---                )
---            )
---        )
---    )
---),
-
---El EXISTS verifica que la tabla tenga algun turno en la misma sede, mismo medico y mismo dia cuya hora de inicio sea exactamente
---15 minutos antes de la hora de inicio del turno actual. El NOT EXISTS es para verificar si el turno actual es el primer turno del día en la misma sede y para el mismo medico del turno actual (ya que si es el primer turno la condición de EXISTS no se cumple)
+	   CONSTRAINT chk_horaInicio CHECK(fnHospital.validarHorario(id_medico, id_sede_atencion, dia, horaInicio) = 0),
 		CONSTRAINT fk_diasXsedeMedico FOREIGN KEY (id_medico) REFERENCES dbHospital.medico (id_medico),
 		CONSTRAINT fk_diasXsedeSedeAtencion FOREIGN KEY (id_sede_atencion) REFERENCES dbHospital.sedeDeAtencion (id_sede),
 		CONSTRAINT UQ_diasSede UNIQUE (id_dia_sede, id_medico, dia, horaInicio) -- para un mismo dia, misma sede, mismo medico y misma hora solo existe 1 turno, por ende debe ser unico
