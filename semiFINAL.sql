@@ -53,7 +53,7 @@ GO
 
 -- otra forma de consultar si existe la tabla 
 
-IF NOT EXISTS ( SELECT 1 FROM sys.tables  WHERE name = 'paciente'   AND schema_id = SCHEMA_ID('dbHospital')) 
+IF NOT EXISTS ( SELECT 1 FROM sys.tables  WHERE name = 'paciente' AND schema_id = SCHEMA_ID('dbHospital')) 
 BEGIN
 	CREATE TABLE dbHospital.paciente(
 
@@ -64,7 +64,7 @@ BEGIN
 		fechaNacimiento			date NOT NULL, -- 
 		tipoDoc					varchar(10) NOT NULL,
 		numDoc					char(8) NOT NULL,
-		sexoBio					char NOT NULL,
+		sexoBio					varchar(9) NOT NULL,
 		genero					varchar(20) NOT NULL,
 		nacionalidad			varchar (20) NOT NULL,
 		fotoPerfil				varchar (50), --no viene en carga masiva, puede ser null
@@ -75,37 +75,37 @@ BEGIN
 		fechaRegistro			datetime DEFAULT GETDATE(),
 		fechaAct				datetime DEFAULT GETDATE(), 
 		usuarioAct				varchar(40),
-		CONSTRAINT CK_mail CHECK (
+		CONSTRAINT ck_mail CHECK (
 			mail LIKE '%@%'							-- Debe contener al menos un símbolo "@".
 			AND mail LIKE '%.%'						-- Debe contener al menos un punto ".".
 			AND mail NOT LIKE '%@%@%'				-- Debe tener solo un símbolo "@".
 			AND LEN(mail) > 5						-- Debe tener al menos 5 caracteres.
 			AND LEN(mail) < 30						-- Debe tener hasta 30 caracteres.
 		),
-		CONSTRAINT CK_telFijo CHECK(
+		CONSTRAINT ck_telFijo CHECK(
 			LEN(telFijo) >= 10						-- Debe tener al menos 10 caracteres.
 			AND LEN(telFijo) <= 13					-- Debe tener como máximo 13 caracteres.
 			--AND ISNUMERIC(telFijo) = 1			-- Debe ser numérico.
 			AND telFijo NOT LIKE '%[^(0-9)\-]%'		-- Debe contener solo dígitos numéricos.
 		),   --los datos de telfijo vienen cargados como (xxx) xxx-xxxx
-		CONSTRAINT CK_telAlt CHECK((
+		CONSTRAINT ck_telAlt CHECK((
 			LEN(telAlt) >= 10						-- Debe tener al menos 10 caracteres.
 			AND LEN(telAlt) <= 14					-- Debe tener como máximo 13 caracteres.
 			--AND ISNUMERIC(telAlt) = 1				-- Debe ser numérico.
 			AND telAlt NOT LIKE '%[^(0-9)\-]%')		-- Debe contener solo dígitos numéricos.
 			--OR telAlt IS NULL						--Puede ser NULL-> no es extrictamente necesario, ya se especifíco al momento de crear el campo	
 		),
-		CONSTRAINT CK_telLaboral CHECK((
+		CONSTRAINT ck_telLaboral CHECK((
 			LEN(telLaboral) >= 10					-- Debe tener al menos 10 caracteres.
 			AND LEN(telLaboral) <= 13				-- Debe tener como máximo 13 caracteres.
 			--AND ISNUMERIC(telLaboral) = 1			-- Debe ser numérico.
 			AND telLaboral NOT LIKE '%[^(0-9)\-]%')	-- Debe contener solo dígitos numéricos.
 			--OR telLaboral IS NULL					-- Puede ser NULL ->no es extrictamente necesario, ya se especifíco al momento de crear el campo					
 		),
-		CONSTRAINT CK_sexoBio CHECK(
-			sexoBio IN ('F','M')					-- Debe ser 'Femenino' o 'Masculino'
+		CONSTRAINT ck_sexoBio CHECK(
+			sexoBio IN ('Femenino','Masculino')			-- Debe ser 'Femenino' o 'Masculino'
 		), --en archivo vienen como Femenino-masculino, no solo una letra
-		CONSTRAINT CK_nroDoc CHECK (
+		CONSTRAINT ck_nroDoc CHECK (
 			numDoc NOT LIKE '[^0-9]'				-- Debe ser unicamente dígitos. " [^0-9] " -> 'no puede ser distinto a numerico' 
 			AND LEN(numDoc) >= 7					-- Debe tener una longitud mayor o igual a dígitos.
 		)
