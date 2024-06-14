@@ -467,7 +467,7 @@ BEGIN
 		costo				int NOT NULL,
 		actualizacion		varchar (10) NOT NULL,
 		
-		CONSTRAINT fk_autorizacionEstudio FOREIGN KEY (id_prestador) REFERENCES dbHospital.prestador (id_prestador);
+		CONSTRAINT fk_autorizacionEstudio FOREIGN KEY (id_prestador) REFERENCES dbHospital.prestador (id_prestador)
 );
 END
 GO
